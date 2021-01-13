@@ -1,23 +1,20 @@
-import { CliSystem, createDefaultCliSystem } from "./cli_system";
+import { CliSystem, createCliSystem } from "./cli_system";
 
-async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<void> {
+export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<void> {
   let exit = false;
 
   while (!exit) {
-    // This looks a little wrong. We have mixed abstractions here.
-    // This line below is "lower level" code than the rest of the code in this
-    // method. This is such a common problem in code that we almost stop noticing it,
-    // but fixing it makles the code better.
-    cliSystem.output.writeOutput(`${cliSystem.prompt || ">"} `);
+    cliSystem.output.prompt();
+
     const commandLine = await cliSystem.input.readCommandLine();
     const result = await cliSystem.commandProcessor.processCommand(commandLine);
 
-    // Same here, seems a little less abstract.
-    cliSystem.output.writeOutput(result.output + "\n");
+    cliSystem.output.printResult(result);
     exit = result.shouldExit;
   }
 
-  console.log("Exiting.");
+  // Guess what I was still incorrectly using console.log to print this and it failed the end to end test!
+  cliSystem.output.printResult({ output: "Exiting." });
 }
 
-runCommandLineInterpreter(createDefaultCliSystem()).then(() => process.exit(0));
+runCommandLineInterpreter(createCliSystem()).then(() => process.exit(0));

@@ -9,11 +9,21 @@ export interface CliSystem {
   output: Output;
 }
 
-export function createDefaultCliSystem(prompt?: string): CliSystem {
+export interface CreateCliSystemOptions {
+  prompt?: string;
+  input?: NodeJS.ReadableStream;
+  output?: NodeJS.WritableStream;
+}
+
+export function createCliSystem(options?: CreateCliSystemOptions): CliSystem {
+  // Notice how you can use the "?." operator (sometimes called the "Elvis operator")
+  // in combination with "||" to allow defaults for options.
   return {
-    input: createInputProcessor(process.stdin),
+    input: createInputProcessor(options?.input || process.stdin),
     commandProcessor: createCommandProcessor(),
-    output: createOutput(process.stdout),
-    prompt,
+    output: createOutput({
+      output: options?.output || process.stdout,
+      prompt: options?.prompt,
+    }),
   };
 }
