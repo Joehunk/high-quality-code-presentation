@@ -34,8 +34,6 @@ function buildLowerCaseCommandToProcessorMap(commands: command_model.SingleComma
   return map;
 }
 
-// This is nice. You can add options to a function that used to have no options,
-// and use defaults so you do not break existing callers.
 export function createCommandProcessor(options?: CreateCommandProcessorOptions): CommandProcessor {
   const tokenizer = options?.tokenizer || createTokenizer();
   const lowerCaseCommandToProcessor: StringToProcessorMap = buildLowerCaseCommandToProcessorMap(
@@ -53,9 +51,6 @@ export function createCommandProcessor(options?: CreateCommandProcessorOptions):
         };
       }
 
-      // Now the typescript compiler is smart enough to "narrow" the type by
-      // removing the "| undefined" part since we have checked it above.
-      // if we comment out the check above, this line will fail to compile.
       return processor.process(args);
     },
   };

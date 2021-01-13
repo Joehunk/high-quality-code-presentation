@@ -1,3 +1,5 @@
+import matchall from "string.prototype.matchall";
+
 export interface TokenizedLine {
   lowerCaseCommand: string;
   args: string[];
@@ -10,14 +12,20 @@ export interface Tokenizer {
 export function createTokenizer(): Tokenizer {
   return {
     tokenizeLine(line: string): TokenizedLine {
-      // Destructuring assignments are cool. Other languages like Kotlin
-      // and Scala also have these.
-      const [command, ...args] = line.split(/\s+/);
+      const tokenRegex = /"(.*?)"|([^\s"]+)/g;
+      const matches = [...matchall(line, tokenRegex)].map((match) => match[1] || match[2]);
 
-      return {
-        lowerCaseCommand: command.toLowerCase(),
-        args,
-      };
+      if (matches && matches.length >= 2) {
+        return {
+          lowerCaseCommand: matches[0].toLowerCase(),
+          args: matches.slice(1),
+        };
+      } else {
+        return {
+          lowerCaseCommand: line.toLowerCase(),
+          args: [],
+        };
+      }
     },
   };
 }
