@@ -2,7 +2,7 @@
   "name": "highqualitycode",
   "version": "1.0.0",
   "description": "High Qaality Code Presentation",
-  "main": "dist/index.js",
+  "main": "dist/lib/index.js",
   "types": "dist/types/index.d.ts",
   "scripts": {
     "lint": "tslint -c tslint.json --project .",
@@ -14,7 +14,7 @@
     "watch": "tsc -w",
     "prepare": "npm run-script check-format && npm run-script lint && npm run-script build",
     "test": "jest --config jestconfig.js",
-    "start": "node dist/index.js"
+    "start": "node dist/lib/index.js"
   },
   "author": "Charles Crain",
   "devDependencies": {
