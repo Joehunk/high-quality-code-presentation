@@ -1,24 +1,24 @@
 export interface Result {
+  output: string;
   shouldExit: boolean;
 }
 
 export interface CommandProcessor {
-  // Let's go ahead and make this a promise now. TS makes this easier than some
-  // languages because you can await anything and if it's not a Promise it is
-  // a no-op. In some languages like C# you have to know ahead of time if you
-  // need a Promise (C# calls it a Task) and it is expensive to change.
   processCommand(commandLine: string): Promise<Result>;
 }
 
-export interface CreateCommandProcessorOptions {
-  output: NodeJS.WritableStream;
-}
+// Deleted the options. We might need options later, but don't try to predict requirements
+// or write code for requirements you are not considering yet. Remember "exercise the code"
+// is a tenet of simple design. If you are not exercising the code it is almost surely
+// not the right code.
 
-export function createCommandProcessor(options: CreateCommandProcessorOptions): CommandProcessor {
+export function createCommandProcessor(): CommandProcessor {
   return {
     async processCommand(commandLine: string): Promise<Result> {
-      options.output.write(`You typed: ${commandLine}\n`);
-      return { shouldExit: true };
+      return {
+        output: `You typed: ${commandLine}\n`,
+        shouldExit: true,
+      };
     },
   };
 }

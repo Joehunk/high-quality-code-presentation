@@ -1,18 +1,25 @@
-import { createInputProcessorFromIO } from "../lib/input";
-import { createInputFromString, createOutputCapture } from "./test_utilities";
+import { createInputProcessor } from "../lib/input";
+import { createInputFromString } from "./test_utilities";
 
-// Obviously we would write more tests than this, but this is a good example of a well-written test
-// that was coded top-down.
-test("custom prompt works", () => {
-  const input = createInputFromString("does not matter");
-  const output = createOutputCapture();
-  const prompt = "What's up?";
-  const underTest = createInputProcessorFromIO({
-    input,
-    output,
-    prompt,
-  });
+test("custom prompt works", async () => {
+  const underTest = createInputProcessor(createInputFromString("foo"));
 
-  underTest.readCommandLine();
-  expect(output.readOutput().slice(0, prompt.length)).toBe(prompt);
+  // Now this test is purely functional and not testing a bunch of coupled-together
+  // functionality (Single Responsibility Principle). There is no way I could forget
+  // the await now because I am testing the result, not a side-effect.
+  const result = await underTest.readCommandLine();
+  expect(result).toBe("foo");
 });
+
+// But wait! Our refactoring is not done!
+// We still have some issues:
+//
+// By decoupling the code, we cannot test as much functionality in one test as before.
+// We need more tests.
+//
+// If you look at test_utilities, you will see that there is a function we no longer
+// use called createOutputCapture(). Should we delete it? Normally you should always
+// delete dead code, but it seems like we want to leave it around. Why? I think because
+// it should be used in the additional tests we write. This is a case where a vague
+// sense of "hmm, I do not want to delete this" leads to an insight of "I should
+// write more tests."
