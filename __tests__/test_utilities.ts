@@ -1,10 +1,19 @@
+// Found this on Stack Overflow
+import { Readable } from "stream";
+import * as memStreams from "memory-streams";
+
 export interface OutputReader {
   readOutput(): string;
 }
 
-// Notice that I wrote these test utilities before I had any idea how to implement them.
-// Part of this is experience: I figure most modern runtimes can easily do things like
-// create input streams from strings because I have seen it so much.
-export function createInputFromString(input: string): NodeJS.ReadableStream {}
+export function createInputFromString(input: string): NodeJS.ReadableStream {
+  return Readable.from([input]);
+}
 
-export function createOutputCapture(): NodeJS.WritableStream & OutputReader {}
+export function createOutputCapture(): NodeJS.WritableStream & OutputReader {
+  return new (class extends memStreams.WritableStream {
+    readOutput(): string {
+      return this.toString();
+    }
+  })();
+}
