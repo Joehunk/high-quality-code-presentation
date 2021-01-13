@@ -1,49 +1,62 @@
-export interface Result {
-  output: string;
-  shouldExit: boolean;
-}
+import * as command_model from "./commands/command_model";
+import { DEFAULT_COMMANDS } from "./commands/command_registry";
+import { createTokenizer, Tokenizer } from "./tokenizer";
+
+type Result = command_model.Result;
 
 export interface CommandProcessor {
   processCommand(commandLine: string): Promise<Result>;
 }
 
-function separateFirstWordFromLine(line: string): [string, string] {
-  const splitRegex = /(.+?)\s+(.*)/;
-  const result = splitRegex.exec(line);
-
-  if (result) {
-    return [result[1], result[2]];
-  }
-
-  return [line.trimEnd(), ""];
+export interface CreateCommandProcessorOptions {
+  tokenizer?: Tokenizer;
+  commands?: command_model.SingleCommandProcessor[];
 }
 
-export function createCommandProcessor(): CommandProcessor {
+// The "| undefined" is a nice hint to TypeScript that you expect it to be possible for you to
+// look for an entry that is not there.
+type StringToProcessorMap = Record<string, command_model.SingleCommandProcessor | undefined>;
+
+// Notice how careful naming of functions and variables reminds us where we need to convert to lower case
+// and where we already have.
+function buildLowerCaseCommandToProcessorMap(commands: command_model.SingleCommandProcessor[]): StringToProcessorMap {
+  const map: StringToProcessorMap = {};
+
+  commands.forEach((command) => {
+    const lowerCaseCommand = command.command.toLowerCase();
+    if (map[lowerCaseCommand]) {
+      throw new Error("Duplicate command in registry: " + lowerCaseCommand);
+    }
+
+    map[lowerCaseCommand] = command;
+  });
+
+  return map;
+}
+
+// This is nice. You can add options to a function that used to have no options,
+// and use defaults so you do not break existing callers.
+export function createCommandProcessor(options?: CreateCommandProcessorOptions): CommandProcessor {
+  const tokenizer = options?.tokenizer || createTokenizer();
+  const lowerCaseCommandToProcessor: StringToProcessorMap = buildLowerCaseCommandToProcessorMap(
+    options?.commands || DEFAULT_COMMANDS
+  );
   return {
     async processCommand(commandLine: string): Promise<Result> {
-      const [firstWordOfLine, restOfLine] = separateFirstWordFromLine(commandLine);
-      const command = firstWordOfLine.toLowerCase();
+      const { args, lowerCaseCommand } = tokenizer.tokenizeLine(commandLine);
+      const processor = lowerCaseCommandToProcessor[lowerCaseCommand];
 
-      // Alright this is starting to look like a bad design but let's go for it for now
-      // then refactor. As you are practicing, I recommend write the code the easy way first
-      // then refactor. As you get more experienced, you may be able to do it all at once.
-      // But don't rush.
-      if (command === "echo") {
+      if (!processor) {
         return {
-          output: restOfLine,
-          shouldExit: false,
-        };
-      } else if (command === "exit") {
-        return {
-          output: "Exiting.",
-          shouldExit: true,
-        };
-      } else {
-        return {
-          output: `Unrecognized command: '${command}'`,
+          output: `Unrecognized command: '${lowerCaseCommand}'`,
           shouldExit: false,
         };
       }
+
+      // Now the typescript compiler is smart enough to "narrow" the type by
+      // removing the "| undefined" part since we have checked it above.
+      // if we comment out the check above, this line will fail to compile.
+      return processor.process(args);
     },
   };
 }
