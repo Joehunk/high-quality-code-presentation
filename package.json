@@ -13,11 +13,12 @@
     "build": "tsc",
     "watch": "tsc -w",
     "prepare": "npm run-script check-format && npm run-script lint && npm run-script build",
-    "test": "echo 'No tests currently'",
+    "test": "jest --config jestconfig.js",
     "start": "node dist/index.js"
   },
   "author": "Charles Crain",
   "devDependencies": {
+    "@types/jest": "^26.0.20",
     "jest": "^26.6.3",
     "prettier": "^2.2.1",
     "tslint": "^6.1.3",
