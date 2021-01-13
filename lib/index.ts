@@ -13,7 +13,6 @@ export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<v
     exit = result.shouldExit;
   }
 
-  // Guess what I was still incorrectly using console.log to print this and it failed the end to end test!
   cliSystem.output.printResult({ output: "Exiting." });
 }
 

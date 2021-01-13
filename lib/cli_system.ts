@@ -16,8 +16,6 @@ export interface CreateCliSystemOptions {
 }
 
 export function createCliSystem(options?: CreateCliSystemOptions): CliSystem {
-  // Notice how you can use the "?." operator (sometimes called the "Elvis operator")
-  // in combination with "||" to allow defaults for options.
   return {
     input: createInputProcessor(options?.input || process.stdin),
     commandProcessor: createCommandProcessor(),

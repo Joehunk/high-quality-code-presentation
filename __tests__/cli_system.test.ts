@@ -1,12 +1,10 @@
 import { runCommandLineInterpreter } from "../lib";
 import { createCliSystem } from "../lib/cli_system";
-import { createInputFromString, createOutputCapture } from "./test_utilities";
+import { createInputFromLines, createOutputCapture } from "./test_utilities";
 
-// This is sort of a "snapshot test" in that it's likely to break any time we change
-// something substantive, but that's okay. Our code is still being exercised against a
-// known good state. Snapshot tests is chiefly how CDK code is tested by the way.
+// Let's start with some TDD this time. Change the test to match expected behavior.
 test("end to end", async () => {
-  const reader = createInputFromString("Stuff");
+  const reader = createInputFromLines("echo hello", "exit");
   const writer = createOutputCapture();
   const underTest = createCliSystem({
     input: reader,
@@ -15,5 +13,6 @@ test("end to end", async () => {
   });
 
   await runCommandLineInterpreter(underTest);
-  expect(writer.readOutput()).toBe("> You typed: Stuff\n\nExiting.\n");
+  // Obviously this will fail now but this is the first step in TDD
+  expect(writer.readOutput()).toBe("> hello\n> Exiting.\n");
 });
