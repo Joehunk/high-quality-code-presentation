@@ -11,7 +11,7 @@ export interface OutputReader {
 // new version. It is a trade off. If there are few calls I would probably change.
 // If there are a lot of calls I would leave the old version.
 export function createInputFromLines(...lines: string[]): NodeJS.ReadableStream {
-  return Readable.from(lines);
+  return Readable.from(lines.map((x) => x + "\n"));
 }
 
 export function createInputFromString(input: string): NodeJS.ReadableStream {

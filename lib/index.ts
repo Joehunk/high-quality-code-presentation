@@ -12,8 +12,6 @@ export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<v
     cliSystem.output.printResult(result);
     exit = result.shouldExit;
   }
-
-  cliSystem.output.printResult({ output: "Exiting." });
 }
 
 runCommandLineInterpreter(createCliSystem()).then(() => process.exit(0));
