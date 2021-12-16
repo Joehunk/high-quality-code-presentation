@@ -11,7 +11,7 @@ export function createInputProcessor(input: NodeJS.ReadableStream): InputProcess
     readCommandLine(): Promise<string> {
       return new Promise<string>((resolve, reject) => {
         try {
-          reader.on("line", (input) => resolve(input));
+          reader.on("line", resolve);
         } catch (e) {
           reject(e);
         }
