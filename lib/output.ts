@@ -3,8 +3,8 @@ interface Result {
 }
 
 export interface Output {
-  prompt(): void;
-  printResult(result: Result): void;
+  prompt(): Promise<void>;
+  printResult(result: Result): Promise<void>;
 }
 
 export interface CreateOutputOptions {
@@ -13,12 +13,29 @@ export interface CreateOutputOptions {
 }
 
 export function createOutput(options: CreateOutputOptions): Output {
+  const output = options.output;
+
+  function writeAsync(value: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const shouldResolveSync = output.write(value, (result) => {
+        if (result) {
+          reject(result);
+        } else {
+          resolve();
+        }
+      });
+
+      if (shouldResolveSync) {
+        resolve();
+      }
+    });
+  }
   return {
-    prompt(): void {
-      options.output.write(`${options.prompt || ">"} `);
+    async prompt(): Promise<void> {
+      await writeAsync(`${options.prompt || ">"} `);
     },
-    printResult(result: Result): void {
-      options.output.write(`${result.output}\n`);
+    async printResult(result: Result): Promise<void> {
+      await writeAsync(`${result.output}\n`);
     },
   };
 }
