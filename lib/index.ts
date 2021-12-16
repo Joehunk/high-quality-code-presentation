@@ -14,5 +14,7 @@ export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<v
   }
 }
 
-// tslint:disable-next-line:no-floating-promises
-runCommandLineInterpreter(createCliSystem()).then(() => process.exit(0));
+if (require.main === module) {
+  // tslint:disable-next-line:no-floating-promises
+  runCommandLineInterpreter(createCliSystem()).then(() => process.exit(0));
+}
