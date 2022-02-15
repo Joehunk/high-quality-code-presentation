@@ -6,7 +6,7 @@ export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<v
   while (!exit) {
     await cliSystem.output.prompt();
 
-    const commandLine = await cliSystem.input.readCommandLine();
+    const commandLine = await cliSystem.input.readLine();
     const result = await cliSystem.commandProcessor.processCommand(commandLine);
 
     await cliSystem.output.printResult(result);

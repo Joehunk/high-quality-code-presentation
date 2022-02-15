@@ -1,5 +1,6 @@
 import { runCommandLineInterpreter } from "../lib";
 import { createCliSystem } from "../lib/cli_system";
+import { createCommandOutput, createOutput } from "../lib/output";
 import { createInputFromLines, createOutputCapture } from "./test_utilities";
 
 test("end to end", async () => {
@@ -7,7 +8,7 @@ test("end to end", async () => {
   const writer = createOutputCapture();
   const underTest = createCliSystem({
     input: reader,
-    output: writer,
+    output: createOutput({ outputStream: writer }),
     prompt: ">",
   });
 
@@ -20,7 +21,7 @@ test("end to end 2", async () => {
   const writer = createOutputCapture();
   const underTest = createCliSystem({
     input: reader,
-    output: writer,
+    output: createOutput({ outputStream: writer }),
     prompt: "?",
   });
 

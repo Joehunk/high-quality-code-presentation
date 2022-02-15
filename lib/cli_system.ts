@@ -1,26 +1,26 @@
 import { CommandProcessor, createCommandProcessor } from "./command_processor";
 import { createInputProcessor, InputProcessor } from "./input";
-import { createOutput, Output } from "./output";
+import { CommandOutput, createCommandOutput, createOutput, Output } from "./output";
 
 export interface CliSystem {
   input: InputProcessor;
   commandProcessor: CommandProcessor;
   prompt?: string;
-  output: Output;
+  output: CommandOutput;
 }
 
 export interface CreateCliSystemOptions {
   prompt?: string;
   input?: NodeJS.ReadableStream;
-  output?: NodeJS.WritableStream;
+  output?: Output;
 }
 
 export function createCliSystem(options?: CreateCliSystemOptions): CliSystem {
   return {
     input: createInputProcessor(options?.input || process.stdin),
     commandProcessor: createCommandProcessor(),
-    output: createOutput({
-      output: options?.output || process.stdout,
+    output: createCommandOutput({
+      output: options?.output || createOutput({ outputStream: process.stdout }),
       prompt: options?.prompt,
     }),
   };
