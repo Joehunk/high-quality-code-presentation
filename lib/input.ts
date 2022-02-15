@@ -1,10 +1,10 @@
 import * as readline from "readline";
 
-export interface InputProcessor {
+export interface Input {
   readLine(): Promise<string>;
 }
 
-export function createInputProcessor(input: NodeJS.ReadableStream): InputProcessor {
+export function createInputProcessor(input: NodeJS.ReadableStream): Input {
   const reader = readline.createInterface({ input });
   const queuedLines: string[] = [];
   const waitingCallbacks: ((arg: string) => void)[] = [];
