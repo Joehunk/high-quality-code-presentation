@@ -1,13 +1,5 @@
 import * as fs from "fs";
 import * as util from "util";
-import { Input } from "./input";
-import { Output } from "./output";
-
-export interface Environment {
-  input: Input;
-  output: Output;
-  fileSystem: FileSystem;
-}
 
 export interface FileSystem {
   listFilesInDirectory(directory: string): AsyncGenerator<string, void, unknown>;
@@ -16,6 +8,7 @@ export interface FileSystem {
 type ReturnsPromiseOfIterable<In extends unknown[], Out> = (...input: In) => Promise<Iterable<Out>>;
 type ReturnsAsyncGenerator<In extends unknown[], Out> = (...input: In) => AsyncGenerator<Out, void, unknown>;
 
+// This shows how you can make a method generic in a higher-order function that takes arbitrary arguments.
 function asyncIterableToGenerator<I extends unknown[], O>(
   foo: ReturnsPromiseOfIterable<I, O>
 ): ReturnsAsyncGenerator<I, O> {
@@ -37,6 +30,9 @@ using code that is not unit-testable (i.e. not testable without testing the comp
 mocking them). But, that's okay because all the composed bits are tested,
 and the composition logic itself is trivial -- or is itself unit tested, although in this case
 I am using simple functional composition which is a language feature.
+
+Note: I have not written unit tests for asyncIterableToGenerator() but it is unit testable
+by virtue of being a pure function.
 
 In this case, I wanted to be able to adapt the NodeJS readdir function, which is callback-based,
 into my abstraction for listFilesInDirectory based on an async generator. So, I made reusable,

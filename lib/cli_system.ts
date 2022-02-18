@@ -1,6 +1,6 @@
 import { CommandProcessor, createCommandProcessor } from "./command_processor";
 import { createInputProcessor, Input } from "./input";
-import { CommandOutput, createCommandOutput, createOutput, Output } from "./output";
+import { createOutput, Output } from "./output";
 
 /*
 
@@ -33,25 +33,23 @@ all those sub-factory-methods.
 */
 
 export interface CliSystem {
-  input: Input;
-  commandProcessor: CommandProcessor;
-  prompt?: string;
-  output: CommandOutput;
+  readonly input: Input;
+  readonly output: Output;
+  readonly commandProcessor: CommandProcessor;
+  readonly prompt: string;
 }
 
 export interface CreateCliSystemOptions {
   prompt?: string;
   input?: NodeJS.ReadableStream;
-  output?: Output;
+  output?: NodeJS.WritableStream;
 }
 
 export function createCliSystem(options?: CreateCliSystemOptions): CliSystem {
   return {
     input: createInputProcessor(options?.input || process.stdin),
+    output: createOutput({ outputStream: options?.output || process.stdout }),
     commandProcessor: createCommandProcessor(),
-    output: createCommandOutput({
-      output: options?.output || createOutput({ outputStream: process.stdout }),
-      prompt: options?.prompt,
-    }),
+    prompt: options?.prompt || ">",
   };
 }

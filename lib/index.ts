@@ -4,12 +4,12 @@ export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<v
   let exit = false;
 
   while (!exit) {
-    await cliSystem.output.prompt();
+    await cliSystem.output.write(`${cliSystem.prompt} `);
 
     const commandLine = await cliSystem.input.readLine();
     const result = await cliSystem.commandProcessor.processCommand(commandLine);
 
-    await cliSystem.output.printResult(result);
+    await cliSystem.output.writeLine(result.output);
     exit = result.shouldExit;
   }
 }
