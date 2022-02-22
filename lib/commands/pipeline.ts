@@ -7,7 +7,24 @@ const fromPromise = <Args, R>(p: (...a: readonly Args[]) => Promise<R>) => TE.tr
 
 const fail = (result?: Result) => TE.throwError(() => result || Result.continue());
 const success = (result?: Result) => TE.map(() => result || Result.continue());
+
+/**
+ * Just an identity function with some type checking. Provides some syntactic sugar so you can
+ * have Stage at the beginning of each pipeline stage.
+ *
+ * @example
+ * pipe(
+ *   Stage.of(firstValue),
+ *   Stage.custom(somethingIWrote),
+ *   // etc.
+ * )
+ */
 const custom = <L1, R1, L2, R2>(func: (arg0: TaskEither<L1, R1>) => TaskEither<L2, R2>) => func;
+
+const validateNonEmptyString = (result: Result) =>
+  Stage.chain((value: string) => {
+    return (value && Stage.of(value)) || Stage.error(result);
+  });
 
 function asyncForEach<In, Err>(
   func: (arg0: In) => TaskEither<Err, void>
@@ -41,6 +58,7 @@ export const Stage = {
   success,
   custom,
   error: TE.left,
+  validateNonEmptyString,
 };
 
 export const Adapt = {
