@@ -1,5 +1,5 @@
 import matchall from "string.prototype.matchall";
-
+import { isDefined } from "./util";
 export interface TokenizedLine {
   lowerCaseCommand: string;
   args: string[];
@@ -15,10 +15,12 @@ export function createTokenizer(): Tokenizer {
       const tokenRegex = /"(.*?)"|([^\s"]+)/g;
       const matches = [...matchall(line, tokenRegex)].map((match) => match[1] || match[2]);
 
-      if (matches && matches.length >= 2) {
+      const [command, ...args] = matches;
+
+      if (command) {
         return {
-          lowerCaseCommand: matches[0].toLowerCase(),
-          args: matches.slice(1),
+          lowerCaseCommand: command.toLowerCase(),
+          args: args.filter(isDefined),
         };
       } else {
         return {

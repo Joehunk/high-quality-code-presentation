@@ -13,9 +13,7 @@ export interface CreateCommandProcessorOptions {
   commands?: command_model.SingleCommandProcessor[];
 }
 
-// The "| undefined" is a nice hint to TypeScript that you expect it to be possible for you to
-// look for an entry that is not there.
-type StringToProcessorMap = Record<string, command_model.SingleCommandProcessor | undefined>;
+type StringToProcessorMap = Record<string, command_model.SingleCommandProcessor>;
 
 // Notice how careful naming of functions and variables reminds us where we need to convert to lower case
 // and where we already have.

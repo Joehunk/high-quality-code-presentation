@@ -20,7 +20,8 @@
       "experimentalDecorators": true,
       "resolveJsonModule": true,
       "esModuleInterop": true,
-      "strictPropertyInitialization":false
+      "strictPropertyInitialization":false,
+      "noUncheckedIndexedAccess":true
     },
     "exclude": ["cdk.out","build","node_modules", "dist"]
 }

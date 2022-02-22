@@ -1,4 +1,15 @@
 import { CliSystem, createCliSystem } from "./cli_system";
+import { Result } from "./commands/command_model";
+import { Output } from "./output";
+
+function logFailures(func: () => Promise<Result>): Promise<Result> {
+  return func().catch((reason: any) => {
+    return {
+      shouldExit: false,
+      output: `Error: ${reason}`,
+    };
+  });
+}
 
 export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<void> {
   let exit = false;
@@ -7,7 +18,7 @@ export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<v
     await cliSystem.output.write(`${cliSystem.prompt} `);
 
     const commandLine = await cliSystem.input.readLine();
-    const result = await cliSystem.commandProcessor.processCommand(commandLine);
+    const result = await logFailures(() => cliSystem.commandProcessor.processCommand(commandLine));
 
     await cliSystem.output.writeLine(result.output);
     exit = result.shouldExit;
