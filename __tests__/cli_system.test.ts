@@ -1,3 +1,4 @@
+import escapeStringRegexp from "escape-string-regexp";
 import { runCommandLineInterpreter } from "../lib";
 import { createCliSystem } from "../lib/cli_system";
 import { createInputFromLines, createOutputCapture } from "./test_utilities";
@@ -26,4 +27,33 @@ test("end to end 2", async () => {
 
   await runCommandLineInterpreter(underTest);
   expect(writer.readOutput()).toBe("? hello    world\n? Exiting.\n");
+});
+
+const regexForRandomFileInProjectRoot = new RegExp(escapeStringRegexp("package.json"));
+
+test("directory listing", async () => {
+  const reader = createInputFromLines("ls .", "exit");
+  const writer = createOutputCapture();
+  const underTest = createCliSystem({
+    input: reader,
+    output: writer,
+  });
+
+  await runCommandLineInterpreter(underTest);
+
+  expect(writer.readOutput()).toMatch(regexForRandomFileInProjectRoot);
+});
+
+test("directory listing with bad directory", async () => {
+  const reader = createInputFromLines("ls this_does_not_exist", "exit");
+  const writer = createOutputCapture();
+  const underTest = createCliSystem({
+    input: reader,
+    output: writer,
+  });
+
+  await runCommandLineInterpreter(underTest);
+
+  expect(writer.readOutput()).not.toMatch(regexForRandomFileInProjectRoot);
+  expect(writer.readOutput()).toMatch(/error/i);
 });
