@@ -6,19 +6,39 @@ export interface CommandProcessor<Deps = undefined> {
   processCommand(commandLine: string, cliSystem: Deps): Promise<Result>;
 }
 
+/*
+Why are the T1, T2 etc in array brackets you ask? If the expression on the left hand side of an extends operator
+in a conditional type is a naked type (not an array, object, other type function, etc) then the transpiler
+treats it as a "distributive conditional type", which is a complicated concept but in brief it means that
+if Foo<T> evaluates to Bar<T>, then Foo<T | U> will evaluate to Bar<T> | Bar<U> i.e. the type function is
+distributed over unions. To turn this behavior off, enclose the type expressions in either array or
+object notation.
+*/
 type CombineDependencyTypes<T1, T2> = [T1] extends [undefined] ? T2 : [T2] extends [undefined] ? T1 : T2 & T1;
 
+/* 
+This was a fancy type trick I am proud of. This type function determines the intersection type of all dependencies
+of all commands, so it ensures that when processing a command, you are passing the command processor all dependencies
+that could be needed by any command processor.
+
+I went to all this trouble because otherwise this class was hard/impossible to unit test. It is a composer so it
+should be unit tested, but it was taking in the world of dependencies even if it was composing all command handlers
+that didn't need them. So I had to construct crap like IO and a file system that the unit test never used nor
+should this unit depend on anyway.
+
+So, command handlers now declare their dependency requirements in their types, SingleCommandHandler<Deps>.
+And the intersection of all handlers' dependencies is that the top level composite expects.
+*/
 type Dependencies<T> = T extends []
   ? undefined
   : T extends SingleCommandProcessor<infer SingleDep>
   ? SingleDep
-  : T extends SingleCommandProcessor<infer ArrayDep>[]
-  ? ArrayDep
   : T extends readonly [SingleCommandProcessor<infer FirstDep>, ...infer RestOfProcessors]
-  ? CombineDependencyTypes<FirstDep, Dependencies<RestOfProcessors>>
-  : undefined;
+  ? CombineDependencyTypes<Dependencies<RestOfProcessors>, FirstDep>
+  : never;
 
 type UnknownCommands = readonly SingleCommandProcessor<unknown>[];
+type DefaultDependencies = Dependencies<typeof DEFAULT_COMMANDS>;
 
 interface HasTokenizer {
   readonly tokenizer: Tokenizer;
@@ -51,21 +71,21 @@ function buildLowerCaseCommandToProcessorMap<T extends UnknownCommands>(
   return map;
 }
 
-export function createCommandProcessor<T extends UnknownCommands>(
-  options: HasCommands<T> | (HasCommands<T> & HasTokenizer)
-): CommandProcessor<Dependencies<T>>;
+export function createCommandProcessor<Commands extends UnknownCommands>(
+  options: HasCommands<Commands> | (HasCommands<Commands> & HasTokenizer)
+): CommandProcessor<Dependencies<Commands>>;
 
-export function createCommandProcessor(options?: HasTokenizer): CommandProcessor<Dependencies<typeof DEFAULT_COMMANDS>>;
+export function createCommandProcessor(options?: HasTokenizer): CommandProcessor<DefaultDependencies>;
 
-export function createCommandProcessor<T extends UnknownCommands>(
-  options?: CreateCommandProcessorOptions<T>
-): CommandProcessor<unknown> {
+export function createCommandProcessor<Commands extends UnknownCommands>(
+  options?: CreateCommandProcessorOptions<Commands>
+): CommandProcessor<DefaultDependencies | Dependencies<Commands>> {
   const tokenizer = options?.tokenizer || createTokenizer();
   const lowerCaseCommandToProcessor: StringToProcessorMap<unknown> = buildLowerCaseCommandToProcessorMap(
     options?.commands || DEFAULT_COMMANDS
   );
   return {
-    async processCommand(commandLine: string, dependencies: Dependencies<T>): Promise<Result> {
+    async processCommand(commandLine: string, dependencies: Dependencies<Commands>): Promise<Result> {
       const { args, lowerCaseCommand } = tokenizer.tokenizeLine(commandLine);
       const processor = lowerCaseCommandToProcessor[lowerCaseCommand];
 
