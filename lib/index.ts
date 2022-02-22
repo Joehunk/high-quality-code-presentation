@@ -7,7 +7,7 @@ function logFailures(func: () => Promise<Result>): Promise<Result> {
   return func().catch((reason: any) => {
     return {
       shouldExit: false,
-      output: `Error: ${reason}`,
+      output: `Command produced the following error:\n${reason}`,
     };
   });
 }
