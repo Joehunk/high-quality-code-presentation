@@ -1,7 +1,8 @@
 import { CliSystem, createCliSystem } from "./cli_system";
 import { Result } from "./commands/command_model";
-import { Output } from "./output";
 
+// By marshalling an exception from a command line function into a result, as opposed to
+// catching and logging, this method remains non-side-effecting and therefore fully unit testable.
 function logFailures(func: () => Promise<Result>): Promise<Result> {
   return func().catch((reason: any) => {
     return {
@@ -15,12 +16,14 @@ export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<v
   let exit = false;
 
   while (!exit) {
-    await cliSystem.output.write(`${cliSystem.prompt} `);
+    await cliSystem.environment.output.write(`${cliSystem.environment.prompt} `);
 
-    const commandLine = await cliSystem.input.readLine();
-    const result = await logFailures(() => cliSystem.commandProcessor.processCommand(commandLine));
+    const commandLine = await cliSystem.environment.input.readLine();
+    const result = await logFailures(() =>
+      cliSystem.commandProcessor.processCommand(commandLine, cliSystem.environment)
+    );
 
-    await cliSystem.output.writeLine(result.output);
+    await cliSystem.environment.output.writeLine(result.output);
     exit = result.shouldExit;
   }
 }

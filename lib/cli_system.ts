@@ -1,4 +1,5 @@
 import { CommandProcessor, createCommandProcessor } from "./command_processor";
+import { createFileSystem, FileSystem } from "./file_system";
 import { createInputProcessor, Input } from "./input";
 import { createOutput, Output } from "./output";
 
@@ -32,24 +33,44 @@ all those sub-factory-methods.
 
 */
 
-export interface CliSystem {
+export interface HasInput {
   readonly input: Input;
+}
+
+export interface HasOutput {
   readonly output: Output;
-  readonly commandProcessor: CommandProcessor;
+}
+
+export interface HasFileSystem {
+  readonly fileSystem: FileSystem;
+}
+
+export interface HasPrompt {
   readonly prompt: string;
 }
 
+type Environment = HasFileSystem & HasInput & HasOutput & HasPrompt;
+
+export interface CliSystem {
+  readonly commandProcessor: CommandProcessor<Environment>;
+  readonly environment: Environment;
+}
+
 export interface CreateCliSystemOptions {
-  prompt?: string;
-  input?: NodeJS.ReadableStream;
-  output?: NodeJS.WritableStream;
+  readonly prompt?: string;
+  readonly input?: NodeJS.ReadableStream;
+  readonly output?: NodeJS.WritableStream;
+  readonly fileSystem?: FileSystem;
 }
 
 export function createCliSystem(options?: CreateCliSystemOptions): CliSystem {
   return {
-    input: createInputProcessor(options?.input || process.stdin),
-    output: createOutput({ outputStream: options?.output || process.stdout }),
+    environment: {
+      input: createInputProcessor(options?.input || process.stdin),
+      output: createOutput({ outputStream: options?.output || process.stdout }),
+      prompt: options?.prompt || ">",
+      fileSystem: options?.fileSystem || createFileSystem(),
+    },
     commandProcessor: createCommandProcessor(),
-    prompt: options?.prompt || ">",
   };
 }

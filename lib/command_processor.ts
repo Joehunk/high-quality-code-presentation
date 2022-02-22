@@ -1,24 +1,43 @@
-import * as command_model from "./commands/command_model";
+import { Result, SingleCommandProcessor } from "./commands/command_model";
 import { DEFAULT_COMMANDS } from "./commands/command_registry";
 import { createTokenizer, Tokenizer } from "./tokenizer";
 
-type Result = command_model.Result;
-
-export interface CommandProcessor {
-  processCommand(commandLine: string): Promise<Result>;
+export interface CommandProcessor<Deps = undefined> {
+  processCommand(commandLine: string, cliSystem: Deps): Promise<Result>;
 }
 
-export interface CreateCommandProcessorOptions {
-  tokenizer?: Tokenizer;
-  commands?: command_model.SingleCommandProcessor[];
+type CombineDependencyTypes<T1, T2> = [T1] extends [undefined] ? T2 : [T2] extends [undefined] ? T1 : T2 & T1;
+
+type Dependencies<T> = T extends []
+  ? undefined
+  : T extends SingleCommandProcessor<infer SingleDep>
+  ? SingleDep
+  : T extends SingleCommandProcessor<infer ArrayDep>[]
+  ? ArrayDep
+  : T extends readonly [SingleCommandProcessor<infer FirstDep>, ...infer RestOfProcessors]
+  ? CombineDependencyTypes<FirstDep, Dependencies<RestOfProcessors>>
+  : undefined;
+
+type UnknownCommands = readonly SingleCommandProcessor<unknown>[];
+
+interface HasTokenizer {
+  readonly tokenizer: Tokenizer;
 }
 
-type StringToProcessorMap = Record<string, command_model.SingleCommandProcessor>;
+interface HasCommands<T extends UnknownCommands> {
+  readonly commands: T;
+}
+
+type CreateCommandProcessorOptions<T extends UnknownCommands> = Partial<HasCommands<T>> & Partial<HasTokenizer>;
+
+type StringToProcessorMap<Deps> = Record<string, SingleCommandProcessor<Deps>>;
 
 // Notice how careful naming of functions and variables reminds us where we need to convert to lower case
 // and where we already have.
-function buildLowerCaseCommandToProcessorMap(commands: command_model.SingleCommandProcessor[]): StringToProcessorMap {
-  const map: StringToProcessorMap = {};
+function buildLowerCaseCommandToProcessorMap<T extends UnknownCommands>(
+  commands: T
+): StringToProcessorMap<Dependencies<T>> {
+  const map: StringToProcessorMap<Dependencies<T>> = {};
 
   commands.forEach((command) => {
     const lowerCaseCommand = command.command.toLowerCase();
@@ -32,13 +51,21 @@ function buildLowerCaseCommandToProcessorMap(commands: command_model.SingleComma
   return map;
 }
 
-export function createCommandProcessor(options?: CreateCommandProcessorOptions): CommandProcessor {
+export function createCommandProcessor<T extends UnknownCommands>(
+  options: HasCommands<T> | (HasCommands<T> & HasTokenizer)
+): CommandProcessor<Dependencies<T>>;
+
+export function createCommandProcessor(options?: HasTokenizer): CommandProcessor<Dependencies<typeof DEFAULT_COMMANDS>>;
+
+export function createCommandProcessor<T extends UnknownCommands>(
+  options?: CreateCommandProcessorOptions<T>
+): CommandProcessor<unknown> {
   const tokenizer = options?.tokenizer || createTokenizer();
-  const lowerCaseCommandToProcessor: StringToProcessorMap = buildLowerCaseCommandToProcessorMap(
+  const lowerCaseCommandToProcessor: StringToProcessorMap<unknown> = buildLowerCaseCommandToProcessorMap(
     options?.commands || DEFAULT_COMMANDS
   );
   return {
-    async processCommand(commandLine: string): Promise<Result> {
+    async processCommand(commandLine: string, dependencies: Dependencies<T>): Promise<Result> {
       const { args, lowerCaseCommand } = tokenizer.tokenizeLine(commandLine);
       const processor = lowerCaseCommandToProcessor[lowerCaseCommand];
 
@@ -49,7 +76,7 @@ export function createCommandProcessor(options?: CreateCommandProcessorOptions):
         };
       }
 
-      return processor.process(args);
+      return processor.process(args, dependencies);
     },
   };
 }
