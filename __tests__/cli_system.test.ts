@@ -57,3 +57,36 @@ test("directory listing with bad directory", async () => {
   expect(writer.readOutput()).not.toMatch(regexForRandomFileInProjectRoot);
   expect(writer.readOutput()).toMatch(/error/i);
 });
+
+test("directory listing multiple", async () => {
+  const reader = createInputFromLines("ls . __tests__", "exit");
+  const writer = createOutputCapture();
+  const underTest = createCliSystem({
+    input: reader,
+    output: writer,
+  });
+
+  await runCommandLineInterpreter(underTest);
+
+  const regexForFileInTestsDirectory = new RegExp(escapeStringRegexp("cli_system.test.ts"));
+
+  expect(writer.readOutput()).toMatch(regexForRandomFileInProjectRoot);
+  expect(writer.readOutput()).toMatch(regexForFileInTestsDirectory);
+});
+
+test("directory listing multiple with error", async () => {
+  const reader = createInputFromLines("ls . does_not_exist", "exit");
+  const writer = createOutputCapture();
+  const underTest = createCliSystem({
+    input: reader,
+    output: writer,
+  });
+
+  await runCommandLineInterpreter(underTest);
+
+  const regexForFileInTestsDirectory = new RegExp(escapeStringRegexp("cli_system.test.ts"));
+
+  expect(writer.readOutput()).not.toMatch(regexForRandomFileInProjectRoot);
+  expect(writer.readOutput()).not.toMatch(regexForFileInTestsDirectory);
+  expect(writer.readOutput()).toMatch(/error/i);
+});
