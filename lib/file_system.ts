@@ -9,7 +9,7 @@ type ReturnsPromiseOfIterable<In extends unknown[], Out> = (...input: In) => Pro
 type ReturnsAsyncGenerator<In extends unknown[], Out> = (...input: In) => AsyncGenerator<Out, void, unknown>;
 
 // This shows how you can make a method generic in a higher-order function that takes arbitrary arguments.
-function asyncIterableToGenerator<I extends unknown[], O>(
+export function asyncIterableToGenerator<I extends unknown[], O>(
   promiseIterable: ReturnsPromiseOfIterable<I, O>
 ): ReturnsAsyncGenerator<I, O> {
   async function* ret(...input: I): AsyncGenerator<O, void, unknown> {
