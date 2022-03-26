@@ -1,17 +1,7 @@
+import * as F from "fp-ts/function";
+import * as RA from "fp-ts/ReadonlyArray";
 import { HasFileSystem, HasOutput } from "../cli_system";
 import { Result, SingleCommandProcessor } from "./command_model";
-
-/*
-After banging my head on how to get this to work in fp-ts, as they did not have good primitives for sequences
-the way I wanted to use them, I went back to a language native style.
-
-This gets us back to where the entire class is not really unit-testable without mocking, which would add
-only minimal extra value on top of the system-level test we already have.
-
-I find what I really want is something like Akka not necessarily something like fp-ts. Akka is much more
-natural for running things in parallel than a Monad stack where you might have a list being transiently
-part of the stack and have to account for that.
-*/
 
 async function ensureDirectoryExists(directory: string, { fileSystem }: HasFileSystem): Promise<void> {
   for await (const file of fileSystem.listFilesInDirectory(directory)) {
@@ -19,16 +9,12 @@ async function ensureDirectoryExists(directory: string, { fileSystem }: HasFileS
   }
 }
 
-function concatErrors(results: PromiseSettledResult<unknown>[]): string | null {
-  let errors = "";
-
-  for (const result of results) {
-    if (result.status === "rejected") {
-      errors = `${errors}\n\n${result.reason}`;
-    }
-  }
-
-  return errors || null;
+function concatErrors(results: PromiseSettledResult<unknown>[]): string {
+  return F.pipe(
+    results,
+    RA.chain((result) => (result.status === "rejected" ? [result] : [])),
+    RA.reduce("", (errorOutput, result) => `${errorOutput}\n\n${result.reason}`)
+  );
 }
 
 async function ensureAllDirectoriesExist(directories: string[], dependencies: HasFileSystem): Promise<void> {
