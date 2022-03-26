@@ -77,9 +77,9 @@ export function createCommandProcessor<Commands extends UnknownCommands>(
 
 export function createCommandProcessor(options?: HasTokenizer): CommandProcessor<DefaultDependencies>;
 
-export function createCommandProcessor<Commands extends UnknownCommands>(
+export function createCommandProcessor<Commands extends UnknownCommands = typeof DEFAULT_COMMANDS>(
   options?: CreateCommandProcessorOptions<Commands>
-): CommandProcessor<DefaultDependencies | Dependencies<Commands>> {
+): CommandProcessor<Dependencies<Commands>> {
   const tokenizer = options?.tokenizer || createTokenizer();
   const lowerCaseCommandToProcessor: StringToProcessorMap<unknown> = buildLowerCaseCommandToProcessorMap(
     options?.commands || DEFAULT_COMMANDS
