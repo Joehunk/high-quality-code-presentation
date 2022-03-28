@@ -1,10 +1,10 @@
 import * as readline from "readline";
 
-export interface InputProcessor {
-  readCommandLine(): Promise<string>;
+export interface Input {
+  readLine(): Promise<string>;
 }
 
-export function createInputProcessor(input: NodeJS.ReadableStream): InputProcessor {
+export function createInputProcessor(input: NodeJS.ReadableStream): Input {
   const reader = readline.createInterface({ input });
   const queuedLines: string[] = [];
   const waitingCallbacks: ((arg: string) => void)[] = [];
@@ -26,7 +26,7 @@ export function createInputProcessor(input: NodeJS.ReadableStream): InputProcess
   });
 
   return {
-    async readCommandLine(): Promise<string> {
+    async readLine(): Promise<string> {
       const line = queuedLines.shift();
 
       if (line) {

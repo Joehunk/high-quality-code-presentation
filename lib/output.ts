@@ -1,19 +1,17 @@
 interface Result {
   output: string;
 }
-
 export interface Output {
-  prompt(): Promise<void>;
-  printResult(result: Result): Promise<void>;
+  write(value: string): Promise<void>;
+  writeLine(value: string): Promise<void>;
 }
 
 export interface CreateOutputOptions {
-  prompt?: string;
-  output: NodeJS.WritableStream;
+  readonly outputStream: NodeJS.WritableStream;
 }
 
 export function createOutput(options: CreateOutputOptions): Output {
-  const output = options.output;
+  const output = options.outputStream;
 
   function writeAsync(value: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -30,12 +28,13 @@ export function createOutput(options: CreateOutputOptions): Output {
       }
     });
   }
+
   return {
-    async prompt(): Promise<void> {
-      await writeAsync(`${options.prompt || ">"} `);
+    async write(value: string): Promise<void> {
+      await writeAsync(value);
     },
-    async printResult(result: Result): Promise<void> {
-      await writeAsync(`${result.output}\n`);
+    async writeLine(value: string): Promise<void> {
+      await writeAsync(`${value}\n`);
     },
   };
 }
