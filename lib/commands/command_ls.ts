@@ -1,34 +1,40 @@
-import * as F from "fp-ts/function";
-import * as RA from "fp-ts/ReadonlyArray";
-import { HasFileSystem, HasOutput } from "../cli_system";
+import { HasOutput } from "../cli_system";
+import { FileSystem } from "../file_system";
+import { isDefined } from "../util";
 import { Result, SingleCommandProcessor } from "./command_model";
 
-async function ensureDirectoryExists(directory: string, { fileSystem }: HasFileSystem): Promise<void> {
-  for await (const file of fileSystem.listFilesInDirectory(directory)) {
-    break;
+/*
+This is my attempt to define the dependency of the ls command as narrowly as possible, following
+the least-powerful abstraction principle.
+
+We don't currently have unit tests against the individual command handlers, and it's
+debatable whether they would add additional value over the integration tests we currently
+have. But if we did, it would be nice to only have to mock the bits of a file system
+(or any dependency) needed by each handler, and for each handler to declare which bits
+it needs precisely.
+*/
+type FileSystemDependency = { fileSystem: Pick<FileSystem, "isDirectory" | "listFilesInDirectory"> };
+
+async function ensureAllDirectoriesExist(directories: string[], { fileSystem }: FileSystemDependency): Promise<void> {
+  const errors = (
+    await Promise.all(
+      directories.map(async (d) => {
+        if (await fileSystem.isDirectory(d)) {
+          return undefined;
+        }
+        return `'${d}' does not exist or is not a directory.`;
+      })
+    )
+  ).filter(isDefined);
+
+  if (errors.length > 0) {
+    throw Error(errors.reduce((prev, current) => (prev ? prev + "\n" + current : current), ""));
   }
 }
 
-function concatErrors(results: PromiseSettledResult<unknown>[]): string {
-  return F.pipe(
-    results,
-    RA.chain((result) => (result.status === "rejected" ? [result] : [])),
-    RA.reduce("", (errorOutput, result) => `${errorOutput}\n\n${result.reason}`)
-  );
-}
-
-async function ensureAllDirectoriesExist(directories: string[], dependencies: HasFileSystem): Promise<void> {
-  const results = await Promise.allSettled(directories.map((d) => ensureDirectoryExists(d, dependencies)));
-  const errors = concatErrors(results);
-
-  if (errors) {
-    throw Error(errors);
-  }
-}
-
-export const directoryProcessor: SingleCommandProcessor<HasOutput & HasFileSystem> = {
+export const directoryProcessor: SingleCommandProcessor<HasOutput & FileSystemDependency> = {
   command: "ls",
-  async process(args: string[], dependencies: HasOutput & HasFileSystem): Promise<Result> {
+  async process(args: string[], dependencies: HasOutput & FileSystemDependency): Promise<Result> {
     if (args.length < 1) {
       return Result.continue("Must supply at least one directory.");
     }
