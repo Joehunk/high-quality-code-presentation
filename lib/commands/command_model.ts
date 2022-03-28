@@ -5,5 +5,5 @@ export interface Result {
 
 export interface SingleCommandProcessor {
   command: string;
-  process(args: string[]): Result;
+  process(args: string[]): Result | Promise<Result>;
 }

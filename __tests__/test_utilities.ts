@@ -1,5 +1,5 @@
-import { Readable } from "stream";
 import * as memStreams from "memory-streams";
+import { Readable } from "stream";
 
 export interface OutputReader {
   readOutput(): string;
