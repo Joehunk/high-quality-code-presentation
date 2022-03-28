@@ -3,7 +3,7 @@
 //
 // Add an array of npm 3rd party module names you want to transpile
 // for testing here.
-const modulesToTranspileForTesting = [];
+const modulesToTranspileForTesting = ["escape-string-regexp"];
 
 function getTransformIgnorePatterns() {
   if (modulesToTranspileForTesting && modulesToTranspileForTesting.length > 0) {
