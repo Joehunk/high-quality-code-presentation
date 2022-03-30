@@ -1,7 +1,8 @@
 import * as readline from "readline";
+import { CommandEffect } from "./effects";
 
 export interface Input {
-  readLine(): Promise<string>;
+  readLine: CommandEffect<void, string>;
 }
 
 export function createInputProcessor(input: NodeJS.ReadableStream): Input {

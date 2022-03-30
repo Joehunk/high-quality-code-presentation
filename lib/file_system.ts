@@ -1,8 +1,9 @@
 import * as fs from "fs";
 import * as util from "util";
+import { StreamingCommandEffect } from "./effects";
 
 export interface FileSystem {
-  listFilesInDirectory(directory: string): AsyncGenerator<string, void, unknown>;
+  listDirectory: StreamingCommandEffect<string, string>;
 }
 
 type ReturnsPromiseOfIterable<In extends unknown[], Out> = (...input: In) => Promise<Iterable<Out>>;
@@ -44,6 +45,6 @@ provided by Node and do not need to be tested by me).
 
 export function createFileSystem(): FileSystem {
   return {
-    listFilesInDirectory: asyncIterableToGenerator<[string], string>(util.promisify(fs.readdir)),
+    listDirectory: asyncIterableToGenerator<[string], string>(util.promisify(fs.readdir)),
   };
 }

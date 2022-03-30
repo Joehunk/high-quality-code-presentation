@@ -1,5 +1,6 @@
 import { CliSystem, createCliSystem } from "./cli_system";
-import { Result } from "./commands/command_model";
+import { executeCommand } from "./command-executor";
+import { Result } from "./commands/types";
 
 // By marshalling an exception from a command line function into a result, as opposed to
 // catching and logging, this method remains non-side-effecting and therefore fully unit testable.
@@ -16,14 +17,19 @@ export async function runCommandLineInterpreter(cliSystem: CliSystem): Promise<v
   let exit = false;
 
   while (!exit) {
-    await cliSystem.environment.output.write(`${cliSystem.environment.prompt} `);
+    await cliSystem.environment.io.output(`${cliSystem.configuration.prompt} `);
 
-    const commandLine = await cliSystem.environment.input.readLine();
+    const tokenizedLine = await cliSystem.environment.io.input().then(cliSystem.configuration.tokenizer.tokenizeLine);
     const result = await logFailures(() =>
-      cliSystem.commandProcessor.processCommand(commandLine, cliSystem.environment)
+      executeCommand(
+        cliSystem.commandRegistry,
+        cliSystem.environment,
+        tokenizedLine.lowerCaseCommand,
+        tokenizedLine.args
+      )
     );
 
-    await cliSystem.environment.output.writeLine(result.output);
+    await cliSystem.environment.io.output(result.output + "\n");
     exit = result.shouldExit;
   }
 }

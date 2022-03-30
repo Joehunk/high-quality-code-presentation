@@ -1,9 +1,10 @@
+import { CommandEffect } from "./effects";
+
 interface Result {
   output: string;
 }
 export interface Output {
-  write(value: string): Promise<void>;
-  writeLine(value: string): Promise<void>;
+  write: CommandEffect<string, void>;
 }
 
 export interface CreateOutputOptions {
@@ -32,9 +33,6 @@ export function createOutput(options: CreateOutputOptions): Output {
   return {
     async write(value: string): Promise<void> {
       await writeAsync(value);
-    },
-    async writeLine(value: string): Promise<void> {
-      await writeAsync(`${value}\n`);
     },
   };
 }

@@ -54,7 +54,6 @@ test("directory listing with bad directory", async () => {
 
   await runCommandLineInterpreter(underTest);
 
-  expect(writer.readOutput()).not.toMatch(regexForRandomFileInProjectRoot);
   expect(writer.readOutput()).toMatch(/error/i);
 });
 
@@ -86,7 +85,7 @@ test("directory listing multiple with error", async () => {
 
   const regexForFileInTestsDirectory = new RegExp(escapeStringRegexp("cli_system.test.ts"));
 
-  expect(writer.readOutput()).not.toMatch(regexForRandomFileInProjectRoot);
+  expect(writer.readOutput()).toMatch(regexForRandomFileInProjectRoot);
   expect(writer.readOutput()).not.toMatch(regexForFileInTestsDirectory);
   expect(writer.readOutput()).toMatch(/error/i);
 });

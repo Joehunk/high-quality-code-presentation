@@ -5,6 +5,6 @@ test("print result", async () => {
   const writer = createOutputCapture();
   const underTest = createOutput({ outputStream: writer });
 
-  await underTest.writeLine("Hello World!");
+  await underTest.write("Hello World!\n");
   expect(writer.readOutput()).toBe("Hello World!\n");
 });
