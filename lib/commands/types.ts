@@ -1,3 +1,5 @@
+import { CommandEffect } from "../effects";
+
 export interface Result {
   output: string;
   shouldExit: boolean;
@@ -7,7 +9,7 @@ export type PureCommand = (args: ReadonlyArray<string>) => Result;
 
 export type NoEffects = {};
 
-export type EffectfulCommand<E = NoEffects> = (effects: E) => (args: ReadonlyArray<string>) => Promise<Result>;
+export type EffectfulCommand<E = NoEffects> = (effects: E) => CommandEffect<ReadonlyArray<string>, Result>;
 
 export const Command = {
   pure: (command: PureCommand): EffectfulCommand => () => async (args) => command(args),
